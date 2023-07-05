@@ -130,20 +130,17 @@ fieldset/BCR:
   description: "I3C bus characteristics register "
   fields:
     - name: BCR0
-      description: max data speed limitation
+      description: max data speed limitation. 0 no limitation. 1 limitation, as described by GETMXDSR."
       bit_offset: 0
       bit_size: 1
-      enum: BCR0
     - name: BCR2
-      description: in-band interrupt (IBI) payload
+      description: in-band interrupt (IBI) payload. 1 = at least one mandatory data byte follows the accepted IBI (and at most 4 data bytes)
       bit_offset: 2
       bit_size: 1
-      enum: BCR2
     - name: BCR6
-      description: controller capable
+      description: controller capable. 1 = capable.
       bit_offset: 6
       bit_size: 1
-      enum: BCR6
 fieldset/CEVR:
   description: "I3C clear event register "
   fields:
@@ -249,7 +246,6 @@ fieldset/CFGR:
       description: "I3C enable (whatever I3C is acting as controller/target)\r - Except registers, the peripheral is under reset (a.k.a. partial reset).\r - Before clearing EN, when I3C is acting as a controller, all the possible target requests must be disabled using DISEC CCC.\r - When I3C is acting as a target, software should not disable the I3C, unless a partial reset is needed.\r In this state, some register fields can not be modified (like CRINIT, HKSDAEN for the CFGR)"
       bit_offset: 0
       bit_size: 1
-      enum: EN
     - name: CRINIT
       description: "initial controller/target role\r This bit can be modified only when CFGR.EN = 0.\r Once enabled by setting CFGR.EN = 1, I3C peripheral initially acts as an I3C target. I3C does not drive SCL line and does not enable SDA pull-up, until it eventually acquires the controller role.\r Once enabled by setting CFGR.EN = 1, I3C peripheral initially acts as a controller. It has the I3C controller role, so drives SCL line and enables SDA pull-up, until it eventually offers the controller role to an I3C secondary controller."
       bit_offset: 1
@@ -385,7 +381,7 @@ fieldset/CRCAPR:
       bit_offset: 9
       bit_size: 1
       enum: CAPGRP
-fieldset/CR_ALT
+fieldset/CR_ALT:
   description: Control register alternate usage
   fields:
     - name: DCNT
@@ -430,27 +426,26 @@ fieldset/DEVR0:
       description: "IBI request enable (when the I3C is acting as target)\r This field is initially written by software when CFGR.EN=0, and is updated by hardware on the reception of DISEC CCC with DISINT=1 (i.e. cleared) and the reception of ENEC CCC with ENINT=1 (i.e. set)."
       bit_offset: 16
       bit_size: 1
-      enum: IBIEN
     - name: CREN
       description: "controller-role request enable (when the I3C is acting as target)\r This field is initially written by software when CFGR.EN=0, and is updated by hardware on the reception of DISEC CCC with DISCR=1 (i.e. cleared) and the reception of ENEC CCC with ENCR=1 (i.e. set)."
       bit_offset: 17
       bit_size: 1
-      enum: CREN
     - name: HJEN
       description: "hot-join request enable (when the I3C is acting as target)\r This field is initially written by software when CFGR.EN=0, and is updated by hardware on the reception of DISEC CCC with DISHJ=1 (i.e. cleared) and the reception of ENEC CCC with ENHJ=1 (i.e. set)."
       bit_offset: 19
       bit_size: 1
-      enum: HJEN
     - name: AS
       description: "activity state (when the I3C is acting as target)\r This read field is updated by hardware on the reception of a ENTASx CCC (enter activity state, with x=0-3):"
       bit_offset: 20
       bit_size: 2
       enum: AS
+      access: Read
     - name: RSTACT
       description: "reset action/level on received reset pattern (when the I3C is acting as target)\r This read field is used by hardware on the reception of a direct read RSTACT CCC in order to return the corresponding data byte on the I3C bus.\r This read field is updated by hardware on the reception of a broadcast or direct write RSTACT CCC (target reset action).\r Only the defining bytes 0x00, 0x01 and 0x02 are mapped, and RSTACT[1:0] = Defining Byte[1:0].\r a) partially reset the I3C peripheral, by a write and clear of the enable bit of the i3C\r configuration register (i.e. write CFGR.EN=0). This reset the I3C bus interface\r and the I3C kernel sub-parts, without modifying the content of the I3C APB registers\r (excepted the CFGR.EN bit).\r b) reset fully the I3C peripheral including all its registers via a write and set to the I3C\r reset control bit of the RCC (Reset and Clock Controller) register.\r a system reset. This has the same impact as a pin reset (i.e. NRST=0) (refer to RCC functional description - Reset part):\r – the software writes and set the AICR.SYSRESETREQ register control bit, when the\r device is controlled by a CortexTM-M.\r – the software writes and set the RCC_GRSTCSETR.SYSRST=1, when the device is\r controlled by a CortexTM-A."
       bit_offset: 22
       bit_size: 2
       enum: RSTACT
+      access: Read
     - name: RSTVAL
       description: "reset action is valid (when the I3C is acting as target)\r This read bit is asserted by hardware to indicate that the RTSACT[1:0] field has been updated on the reception of a broadcast or direct write RSTACT CCC (target reset action) and is valid.\r This field is cleared by hardware when the target receives a frame start.\r If RSTVAL=1: when the RSTF is asserted (and/or the corresponding interrupt if enabled), DEVR0.RSTACT[1:0] dictates the reset action to be performed by the software if any.\r If RSTVAL=0: when the RSTF is asserted (and/or the corresponding interrupt if enabled), the software should issue an I3C reset after a first detected reset pattern, and a system reset on the second one."
       bit_offset: 24
@@ -594,10 +589,12 @@ fieldset/EPIDR:
       description: "provisioned ID type selector\r This field is set as 0 i.e. vendor fixed value.\r This field represents the bit[32] of the 48-bit provisioned ID.\r Note: The bits[31:16] of the provisioned ID may be 0."
       bit_offset: 16
       bit_size: 1
+      access: Read
     - name: MIPIMID
       description: "15-bit MIPI manufacturer ID\r This read field is the 15-bit STMicroelectronics MIPI ID i.e. 0x0104.\r This field represents the bits[47:33] of the 48-bit provisioned ID."
       bit_offset: 17
       bit_size: 15
+      access: Read
 fieldset/EVR:
   description: "I3C event register "
   fields:
@@ -716,7 +713,6 @@ fieldset/GETCAPR:
       description: "IBI MDB support for pending read notification\r This bit is written by software during bus initialization (i.e. CFGR.EN=0) and indicates the support (or not) of the pending read notification via the IBI MDB[7:0] value.\r This bit is used to return the GETCAP3 byte in response to the GETCAPS CCC format 1."
       bit_offset: 14
       bit_size: 1
-      enum: CAPPEND
 fieldset/GETMXDSR:
   description: "I3C get capability register "
   fields:
@@ -765,117 +761,94 @@ fieldset/IER:
       description: C-FIFO not full interrupt enable (whatever the I3C is acting as controller/target)
       bit_offset: 2
       bit_size: 1
-      enum: CFNFIE
     - name: SFNEIE
       description: S-FIFO not empty interrupt enable (whatever the I3C is acting as controller/target)
       bit_offset: 3
       bit_size: 1
-      enum: SFNEIE
     - name: TXFNFIE
       description: TX-FIFO not full interrupt enable (whatever the I3C is acting as controller/target)
       bit_offset: 4
       bit_size: 1
-      enum: TXFNFIE
     - name: RXFNEIE
       description: RX-FIFO not empty interrupt enable (whatever the I3C is acting as controller/target)
       bit_offset: 5
       bit_size: 1
-      enum: RXFNEIE
     - name: FCIE
       description: frame complete interrupt enable (whatever the I3C is acting as controller/target)
       bit_offset: 9
       bit_size: 1
-      enum: FCIE
     - name: RXTGTENDIE
       description: target-initiated read end interrupt enable (when the I3C is acting as controller)
       bit_offset: 10
       bit_size: 1
-      enum: RXTGTENDIE
     - name: ERRIE
       description: error interrupt enable (whatever the I3C is acting as controller/target)
       bit_offset: 11
       bit_size: 1
-      enum: ERRIE
     - name: IBIIE
       description: IBI request interrupt enable (when the I3C is acting as controller)
       bit_offset: 15
       bit_size: 1
-      enum: IBIIE
     - name: IBIENDIE
       description: IBI end interrupt enable (when the I3C is acting as target)
       bit_offset: 16
       bit_size: 1
-      enum: IBIENDIE
     - name: CRIE
       description: controller-role request interrupt enable (when the I3C is acting as controller)
       bit_offset: 17
       bit_size: 1
-      enum: CRIE
     - name: CRUPDIE
       description: controller-role update interrupt enable (when the I3C is acting as target)
       bit_offset: 18
       bit_size: 1
-      enum: CRUPDIE
     - name: HJIE
       description: hot-join interrupt enable (when the I3C is acting as controller)
       bit_offset: 19
       bit_size: 1
-      enum: HJIE
     - name: WKPIE
       description: wakeup interrupt enable (when the I3C is acting as target)
       bit_offset: 21
       bit_size: 1
-      enum: WKPIE
     - name: GETIE
       description: GETxxx CCC interrupt enable (when the I3C is acting as target)
       bit_offset: 22
       bit_size: 1
-      enum: GETIE
     - name: STAIE
       description: GETSTATUS CCC interrupt enable (when the I3C is acting as target)
       bit_offset: 23
       bit_size: 1
-      enum: STAIE
     - name: DAUPDIE
       description: ENTDAA/RSTDAA/SETNEWDA CCC interrupt enable (when the I3C is acting as target)
       bit_offset: 24
       bit_size: 1
-      enum: DAUPDIE
     - name: MWLUPDIE
       description: SETMWL CCC interrupt enable (when the I3C is acting as target)
       bit_offset: 25
       bit_size: 1
-      enum: MWLUPDIE
     - name: MRLUPDIE
       description: SETMRL CCC interrupt enable (when the I3C is acting as target)
       bit_offset: 26
       bit_size: 1
-      enum: MRLUPDIE
     - name: RSTIE
       description: reset pattern interrupt enable (when the I3C is acting as target)
       bit_offset: 27
       bit_size: 1
-      enum: RSTIE
     - name: ASUPDIE
       description: ENTASx CCC interrupt enable (when the I3C is acting as target)
       bit_offset: 28
       bit_size: 1
-      enum: ASUPDIE
     - name: INTUPDIE
       description: ENEC/DISEC CCC interrupt enable (when the I3C is acting as target)
       bit_offset: 29
       bit_size: 1
-      enum: INTUPDIE
     - name: DEFIE
       description: DEFTGTS CCC interrupt enable (when the I3C is acting as target)
       bit_offset: 30
       bit_size: 1
-      enum: DEFIE
     - name: GRPIE
       description: DEFGRPA CCC interrupt enable (when the I3C is acting as target)
       bit_offset: 31
       bit_size: 1
-      enum: GRPIE
 fieldset/MAXRLR:
   description: "I3C maximum read length register "
   fields:
@@ -1143,33 +1116,6 @@ enum/ASUPDIE:
     - name: B_0x1
       description: interrupt enabled
       value: 1
-enum/BCR0:
-  bit_size: 1
-  variants:
-    - name: B_0x0
-      description: no limitation
-      value: 0
-    - name: B_0x1
-      description: "limitation, as described by GETMXDSR."
-      value: 1
-enum/BCR2:
-  bit_size: 1
-  variants:
-    - name: B_0x0
-      description: no data byte follows the accepted IBI
-      value: 0
-    - name: B_0x1
-      description: at least one mandatory data byte follows the accepted IBI (and at most 4 data bytes)
-      value: 1
-enum/BCR6:
-  bit_size: 1
-  variants:
-    - name: B_0x0
-      description: I3C target (no controller capable)
-      value: 0
-    - name: B_0x1
-      description: I3C controller capable
-      value: 1
 enum/CAPDHOFF:
   bit_size: 1
   variants:
@@ -1187,15 +1133,6 @@ enum/CAPGRP:
       value: 0
     - name: B_0x1
       description: this I3C supports group address capabilities (when becoming controller)
-      value: 1
-enum/CAPPEND:
-  bit_size: 1
-  variants:
-    - name: B_0x0
-      description: this I3C when acting as target sends an IBI request without a mandatory data byte value indicating a pending read notification
-      value: 0
-    - name: B_0x1
-      description: "this I3C when acting as target sends an IBI request with a mandatory data byte value (i.e. a MDB[7:5]=101) indicating a pending read notification"
       value: 1
 enum/CASUPDF:
   bit_size: 1
@@ -1277,15 +1214,6 @@ enum/CFLUSH:
       value: 0
     - name: B_0x1
       description: flush C-FIFO
-      value: 1
-enum/CFNFIE:
-  bit_size: 1
-  variants:
-    - name: B_0x0
-      description: interrupt disabled
-      value: 0
-    - name: B_0x1
-      description: interrupt enabled
       value: 1
 enum/CGETF:
   bit_size: 1
@@ -1404,24 +1332,6 @@ enum/COVR:
     - name: B_0x1
       description: "controller detected either:"
       value: 1
-enum/CREN:
-  bit_size: 1
-  variants:
-    - name: B_0x0
-      description: controller-role request disabled
-      value: 0
-    - name: B_0x1
-      description: controller-role request enabled
-      value: 1
-enum/CRIE:
-  bit_size: 1
-  variants:
-    - name: B_0x0
-      description: interrupt disabled
-      value: 0
-    - name: B_0x1
-      description: interrupt enabled
-      value: 1
 enum/CRINIT:
   bit_size: 1
   variants:
@@ -1439,15 +1349,6 @@ enum/CRSTF:
       value: 0
     - name: B_0x1
       description: clear EVR.RSTF
-      value: 1
-enum/CRUPDIE:
-  bit_size: 1
-  variants:
-    - name: B_0x0
-      description: interrupt disabled
-      value: 0
-    - name: B_0x1
-      description: interrupt enabled
       value: 1
 enum/CRXTGTENDF:
   bit_size: 1
@@ -1476,30 +1377,12 @@ enum/CWKPF:
     - name: B_0x1
       description: clear EVR.WKPF
       value: 1
-enum/DAUPDIE:
-  bit_size: 1
-  variants:
-    - name: B_0x0
-      description: interrupt disabled
-      value: 0
-    - name: B_0x1
-      description: interrupt enabled
-      value: 1
 enum/DCR:
   bit_size: 8
   variants:
     - name: B_0x0
       description: generic device (for v1.0 devices)
       value: 0
-enum/DEFIE:
-  bit_size: 1
-  variants:
-    - name: B_0x0
-      description: interrupt disabled
-      value: 0
-    - name: B_0x1
-      description: interrupt enabled
-      value: 1
 enum/DERR:
   bit_size: 1
   variants:
@@ -1536,24 +1419,6 @@ enum/DOVR:
     - name: B_0x1
       description: "whatever controller or target, hardware detected either:"
       value: 1
-enum/EN:
-  bit_size: 1
-  variants:
-    - name: B_0x0
-      description: I3C is disabled
-      value: 0
-    - name: B_0x1
-      description: I3C is enabled
-      value: 1
-enum/ERRIE:
-  bit_size: 1
-  variants:
-    - name: B_0x0
-      description: interrupt disabled
-      value: 0
-    - name: B_0x1
-      description: interrupt enabled
-      value: 1
 enum/EXITPTRN:
   bit_size: 1
   variants:
@@ -1562,15 +1427,6 @@ enum/EXITPTRN:
       value: 0
     - name: B_0x1
       description: "HDR Exit Pattern is sent after the message header (MTYPE[3:0]=0001) to generate an escalation fault"
-      value: 1
-enum/FCIE:
-  bit_size: 1
-  variants:
-    - name: B_0x0
-      description: interrupt disabled
-      value: 0
-    - name: B_0x1
-      description: interrupt enabled
       value: 1
 enum/FMT:
   bit_size: 2
@@ -1587,24 +1443,6 @@ enum/FMT:
     - name: B_0x3
       description: "format 2 (5 bytes with MaxWr with no defining byte, MaxRd, MSB of MaxRdTurn)"
       value: 3
-enum/GETIE:
-  bit_size: 1
-  variants:
-    - name: B_0x0
-      description: interrupt disabled
-      value: 0
-    - name: B_0x1
-      description: interrupt enabled
-      value: 1
-enum/GRPIE:
-  bit_size: 1
-  variants:
-    - name: B_0x0
-      description: interrupt disabled
-      value: 0
-    - name: B_0x1
-      description: interrupt enabled
-      value: 1
 enum/HJACK:
   bit_size: 1
   variants:
@@ -1613,24 +1451,6 @@ enum/HJACK:
       value: 0
     - name: B_0x1
       description: Hot Join request is ACKed
-      value: 1
-enum/HJEN:
-  bit_size: 1
-  variants:
-    - name: B_0x0
-      description: hot-join request disabled
-      value: 0
-    - name: B_0x1
-      description: hot-join request enabled
-      value: 1
-enum/HJIE:
-  bit_size: 1
-  variants:
-    - name: B_0x0
-      description: interrupt disabled
-      value: 0
-    - name: B_0x1
-      description: interrupt enabled
       value: 1
 enum/HKSDAEN:
   bit_size: 1
@@ -1890,33 +1710,6 @@ enum/DEVR4_SUSP:
     - name: B_0x1
       description: I3C transfer is stopped and C-FIFO is flushed on a received IBI request from target x
       value: 1
-enum/IBIEN:
-  bit_size: 1
-  variants:
-    - name: B_0x0
-      description: IBI request disabled
-      value: 0
-    - name: B_0x1
-      description: IBI request enabled
-      value: 1
-enum/IBIENDIE:
-  bit_size: 1
-  variants:
-    - name: B_0x0
-      description: interrupt disabled
-      value: 0
-    - name: B_0x1
-      description: interrupt enabled
-      value: 1
-enum/IBIIE:
-  bit_size: 1
-  variants:
-    - name: B_0x0
-      description: interrupt disabled
-      value: 0
-    - name: B_0x1
-      description: interrupt enabled
-      value: 1
 enum/IBIP:
   bit_size: 3
   variants:
@@ -1935,33 +1728,6 @@ enum/IBIP:
     - name: B_0x4
       description: "4 bytes (including first MDB[7:0])"
       value: 4
-enum/INTUPDIE:
-  bit_size: 1
-  variants:
-    - name: B_0x0
-      description: interrupt disabled
-      value: 0
-    - name: B_0x1
-      description: interrupt enabled
-      value: 1
-enum/MRLUPDIE:
-  bit_size: 1
-  variants:
-    - name: B_0x0
-      description: interrupt disabled
-      value: 0
-    - name: B_0x1
-      description: interrupt enabled
-      value: 1
-enum/MWLUPDIE:
-  bit_size: 1
-  variants:
-    - name: B_0x0
-      description: interrupt disabled
-      value: 0
-    - name: B_0x1
-      description: interrupt enabled
-      value: 1
 enum/NOARBH:
   bit_size: 1
   variants:
@@ -2022,15 +1788,6 @@ enum/RSTACT:
     - name: B_0x3
       description: no reset action
       value: 3
-enum/RSTIE:
-  bit_size: 1
-  variants:
-    - name: B_0x0
-      description: interrupt disabled
-      value: 0
-    - name: B_0x1
-      description: interrupt enabled
-      value: 1
 enum/RSTPTRN:
   bit_size: 1
   variants:
@@ -2057,24 +1814,6 @@ enum/RXFLUSH:
       value: 0
     - name: B_0x1
       description: flush RX-FIFO
-      value: 1
-enum/RXFNEIE:
-  bit_size: 1
-  variants:
-    - name: B_0x0
-      description: interrupt disabled
-      value: 0
-    - name: B_0x1
-      description: interrupt enabled
-      value: 1
-enum/RXTGTENDIE:
-  bit_size: 1
-  variants:
-    - name: B_0x0
-      description: interrupt disabled
-      value: 0
-    - name: B_0x1
-      description: interrupt enabled
       value: 1
 enum/RXTHRES:
   bit_size: 1
@@ -2111,24 +1850,6 @@ enum/SFLUSH:
       value: 0
     - name: B_0x1
       description: flush S-FIFO
-      value: 1
-enum/SFNEIE:
-  bit_size: 1
-  variants:
-    - name: B_0x0
-      description: interrupt disabled
-      value: 0
-    - name: B_0x1
-      description: interrupt enabled
-      value: 1
-enum/STAIE:
-  bit_size: 1
-  variants:
-    - name: B_0x0
-      description: interrupt disabled
-      value: 0
-    - name: B_0x1
-      description: interrupt enabled
       value: 1
 enum/STALL:
   bit_size: 1
@@ -2193,15 +1914,6 @@ enum/TXFLUSH:
     - name: B_0x1
       description: flush TX-FIFO
       value: 1
-enum/TXFNFIE:
-  bit_size: 1
-  variants:
-    - name: B_0x0
-      description: interrupt disabled
-      value: 0
-    - name: B_0x1
-      description: interrupt enabled
-      value: 1
 enum/TXTHRES:
   bit_size: 1
   variants:
@@ -2210,13 +1922,4 @@ enum/TXTHRES:
       value: 0
     - name: B_0x1
       description: 4-byte threshold
-      value: 1
-enum/WKPIE:
-  bit_size: 1
-  variants:
-    - name: B_0x0
-      description: interrupt disabled
-      value: 0
-    - name: B_0x1
-      description: interrupt enabled
       value: 1
