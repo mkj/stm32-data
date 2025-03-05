@@ -303,6 +303,7 @@ impl ParsedRccs {
             ("I2C2", &["I2C1235"]),
             ("I2C3", &["I2C1235"]),
             ("I2C5", &["I2C1235"]),
+            ("I3C1", &["I2C1_I3C1"]),
             ("USB", &["USB", "CLK48", "ICLK"]),
             ("USB_OTG_FS", &["USB", "CLK48", "ICLK"]),
             ("USB_OTG_HS", &["USB", "USBPHYC", "OTGHS", "CLK48", "ICLK"]),
