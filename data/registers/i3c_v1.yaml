@@ -370,12 +370,10 @@ fieldset/DEVR:
     description: 'IBI request acknowledge (when the I3C is acting as controller) When the I3C is acting as controller, this bit is written by software to define the acknowledge policy to be applied on the I3C bus on the reception of a IBI request from target x: - After the NACK, the message continues as initially programmed (the target is aware of the NACK and can emit another IBI request later on) - The field DIS is asserted by hardware to protect DA[6:0] from being modified by software meanwhile the hardware can store internally the current DA[6:0] into the kernel clock domain. - After the ACK, the controller logs the IBI payload data, if any, depending on I3C_DEVRx.IBIDEN. - The software is notified by the IBI flag (i.e. I3C_EVR.IBIF=1) and/or the corresponding interrupt if enabled; - Independently from IBIACK configuration for this or other devices, further IBI request(s) are NACKed until IBI request flag (i.e. I3C_EVR.IBIF) and controller-role request flag (i.e. I3C_EVR.CRF) are both cleared.'
     bit_offset: 16
     bit_size: 1
-    enum: ACK
   - name: CRACK
     description: 'controller-role request acknowledge (when the I3C is acting as controller) When the I3C is acting as controller, this bit is written by software to define the acknowledge policy to be applied on the I3C bus on the reception of a controller-role request from target x: After the NACK, the message continues as initially programmed (the target is aware of the NACK and can emit another controller-role request later on) - The field DIS is asserted by hardware to protect DA[6:0] from being modified by software meanwhile the hardware can store internally the current DA[6:0] into the kernel clock domain. - After the ACK, the message continues as initially programmed. The software is notified by the controller-role request flag (i.e. I3C_EVR.CRF=1) and/or the corresponding interrupt if enabled; For effectively granting the controller-role to the requesting secondary controller, software should issue a GETACCCR (formerly known as GETACCMST), followed by a STOP. - Independently of CRACK configuration for this or other devices, further controller-role request(s) are NACKed until controller-role request flag (i.e. I3C_EVR.CRF) and IBI flag (i.e. I3C_EVR.IBIF) are both cleared.'
     bit_offset: 17
     bit_size: 1
-    enum: ACK
   - name: IBIDEN
     description: IBI data enable (when the I3C is acting as controller) When the I3C is acting as controller, this bit should be written by software to store the BCR[2] bit as received from the target x during broadcast ENTDAA or direct GETBCR CCC via the received I3C_RDR. Writing to this field has no impact when the read field I3C_DEVRx.DIS=1.
     bit_offset: 18
@@ -388,7 +386,6 @@ fieldset/DEVR:
     description: DA[6:0] write disabled (when the I3C is acting as controller) When the I3C is acting as controller, once that software set IBIACK=1 or CRACK=1, this read bit is set by hardware (i.e. DIS=1) to lock the configured DA[6:0] and IBIDEN values. Then, to be able to next modify DA[6:0] or IBIDEN, the software must wait for this field DIS to be de-asserted by hardware (i.e. polling on DIS=0) before modifying these two assigned values to the target x. Indeed, the target may be requesting an IBI or a controller-role meanwhile the controller intends to modify DA[6:0] or IBIDEN.
     bit_offset: 31
     bit_size: 1
-    enum: DIS
 fieldset/DEVR0:
   description: I3C own device characteristics register.
   fields:
@@ -857,13 +854,6 @@ fieldset/TIMINGR2:
     description: controller clock stall time, in number of kernel clock cycles tSCLL_STALL = STALL x tI3CCLK.
     bit_offset: 8
     bit_size: 8
-enum/ACK:
-  bit_size: 1
-  variants:
-  - name: Must_NACKed
-    value: 0
-  - name: Must_ACKed
-    value: 1
 enum/CODERR:
   bit_size: 4
   variants:
@@ -918,15 +908,6 @@ enum/DIR:
   - name: Write
     value: 0
   - name: Read
-    value: 1
-enum/DIS:
-  bit_size: 1
-  variants:
-  - name: Allowed
-    description: write to DA[7:0] and to IBIDEN in the I3C_DEVRx register is allowed
-    value: 0
-  - name: Locked
-    description: write to DA[7:0] and to IBIDEN is disabled/locked
     value: 1
 enum/MEND:
   bit_size: 1
